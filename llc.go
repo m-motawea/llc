@@ -76,17 +76,22 @@ func (l *LLCPDU) MarshalBinary() ([]byte, error) {
 	return b, err
 }
 
-func (l *LLCPDU) UnmarshalBinary(b []byte, ctrlLen int) error {
+func (l *LLCPDU) UnmarshalBinary(b []byte) error {
 	if len(b) < LLCMinLength {
 		return errors.New("invalid header length")
-	}
-	if ctrlLen > 2 || ctrlLen < 1 {
-		return errors.New("invalid control length")
 	}
 
 	tempLSAPs := binary.BigEndian.Uint16(b[0:2])
 	l.DSAP = LSAP((tempLSAPs & 0xFF00) >> 8)
 	l.SSAP = LSAP(tempLSAPs & 0x00FF)
+	// if last two bits of the first byte are ones then this is Unnumbered with one byte control field
+	tmp := binary.BigEndian.Uint16(b[2:4]) >> 8
+	var ctrlLen int
+	if (tmp & 0x03) == 0x03 {
+		ctrlLen = 1
+	} else {
+		ctrlLen = 2
+	}
 	l.Control = b[2 : 2+ctrlLen]
 	l.Packet = b[2+ctrlLen:]
 	return nil

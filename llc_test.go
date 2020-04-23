@@ -38,7 +38,7 @@ func TestLLCPDU(t *testing.T) {
 	}
 
 	test2 := LLCPDU{}
-	err = test2.UnmarshalBinary(STPLLC, 2)
+	err = test2.UnmarshalBinary(STPLLC)
 	if err != nil {
 		t.Errorf("failed to unmarshal from binary due to error %v", err)
 	}
