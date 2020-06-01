@@ -47,7 +47,7 @@ const (
 type LLCPDU struct {
 	DSAP    LSAP
 	SSAP    LSAP
-	Control Control
+	Control []byte
 	Packet  []byte
 }
 
@@ -66,7 +66,9 @@ func (l *LLCPDU) read(b []byte) (int, error) {
 	binary.BigEndian.PutUint16(b[:2], temp)
 	n := len(l.Control)
 	copy(b[2:2+n], l.Control)
-	copy(b[2+n:], l.Packet)
+	if len(l.Packet) > 0 {
+		copy(b[2+n:], l.Packet)
+	}
 	return len(b), nil
 }
 
@@ -92,7 +94,11 @@ func (l *LLCPDU) UnmarshalBinary(b []byte) error {
 	} else {
 		ctrlLen = 2
 	}
-	l.Control = b[2 : 2+ctrlLen]
-	l.Packet = b[2+ctrlLen:]
+	l.Control = make([]byte, ctrlLen)
+	copy(l.Control, b[2:2+ctrlLen])
+	if len(b) > 3 {
+		l.Packet = make([]byte, len(b)-2-ctrlLen)
+		copy(l.Packet, b[2+ctrlLen:])
+	}
 	return nil
 }
