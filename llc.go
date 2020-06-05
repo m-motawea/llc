@@ -87,12 +87,15 @@ func (l *LLCPDU) UnmarshalBinary(b []byte) error {
 	l.DSAP = LSAP((tempLSAPs & 0xFF00) >> 8)
 	l.SSAP = LSAP(tempLSAPs & 0x00FF)
 	// if last two bits of the first byte are ones then this is Unnumbered with one byte control field
-	tmp := binary.BigEndian.Uint16(b[2:4]) >> 8
 	var ctrlLen int
-	if (tmp & 0x03) == 0x03 {
-		ctrlLen = 1
-	} else {
-		ctrlLen = 2
+	ctrlLen = 1
+	if len(b) > 3 {
+		tmp := binary.BigEndian.Uint16(b[2:4]) >> 8
+		if (tmp & 0x03) == 0x03 {
+			ctrlLen = 1
+		} else {
+			ctrlLen = 2
+		}
 	}
 	l.Control = make([]byte, ctrlLen)
 	copy(l.Control, b[2:2+ctrlLen])
